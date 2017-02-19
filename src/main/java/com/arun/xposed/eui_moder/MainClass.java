@@ -5,7 +5,6 @@ package com.arun.xposed.eui_moder;
  */
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.XResources;
 import android.graphics.Color;
 import android.util.TypedValue;
@@ -15,7 +14,6 @@ import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XC_MethodReplacement;
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.callbacks.XC_InitPackageResources;
@@ -28,7 +26,7 @@ import static de.robv.android.xposed.XposedHelpers.setStaticObjectField;
 
 public class MainClass implements IXposedHookLoadPackage,IXposedHookInitPackageResources, IXposedHookZygoteInit {
 
-    public static boolean DISABLE_EUI = true;
+    public static boolean DISABLE_EUI = false;
     public static boolean DISABLE_CC = true;
     public static boolean DARK_MATERIAL_COLOR = true;
     public static boolean SEMI_TRAN_STATUS = true;
@@ -74,22 +72,33 @@ public class MainClass implements IXposedHookLoadPackage,IXposedHookInitPackageR
                 if (DISABLE_EUI) {
                     /* Disable LEUI Flag */
                     Class<?> KGClass = findClass("com.android.keyguard.KeyguardUpdateMonitor", lpparam.classLoader);
+                    XposedBridge.log("LEUI_ENABLE set to false");
                     setStaticObjectField(KGClass, "LEUI_ENABLE", false);
 
-                    findAndHookMethod("com.leui.keyguard.LeUiUtils",lpparam.classLoader,"addFingerprintUnlockFailedCount", Context.class,new XC_MethodReplacement() {
-                        @Override
-                        protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
-                            return null;
-                        }
-                    });
+//                    findAndHookMethod("com.leui.keyguard.LeUiUtils",lpparam.classLoader,"addFingerprintUnlockFailedCount", Context.class,new XC_MethodReplacement() {
+//                        @Override
+//                        protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+//                            return null;
+//                        }
+//                    });
+
+//                    findAndHookMethod("com.android.systemui.statusbar.stack",lpparam.classLoader, "updateOverflowContainerVisibility", boolean.class, new XC_MethodReplacement() {
+//                        @Override
+//                        protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+//                            XposedBridge.log("method updateOverflowContainerVisibility found, replaced with null");
+//                            return null;
+//                        }
+//                    });
+
                 }
 
                 if (DISABLE_CC) {
                     /* Disable EUI recent switcher */
                     Class<?> RecentsClass = findClass("com.android.systemui.recents.Recents", lpparam.classLoader);
                     Class<?> RecentsEnum = findClass("com.android.systemui.recents.Recents$RECENTS_MODE", lpparam.classLoader);
-                    Object loli = getStaticObjectField(RecentsEnum, "LOLIPOP");
-                    setStaticObjectField(RecentsClass, "mSelectedUiMode", loli);
+                    Object LP = getStaticObjectField(RecentsEnum, "LOLIPOP");
+                    XposedBridge.log("Changing Recent's style");
+                    setStaticObjectField(RecentsClass, "mSelectedUiMode", LP);
                 }
 
             } catch (Exception e){
@@ -220,7 +229,7 @@ public class MainClass implements IXposedHookLoadPackage,IXposedHookInitPackageR
                 }
 */
 
-                DISABLE_EUI = prefs.getBoolean("disable_eui", true);
+                DISABLE_EUI = prefs.getBoolean("disable_eui", false);
                 DISABLE_CC = prefs.getBoolean("disable_cc", false);
                 DARK_MATERIAL_COLOR = !prefs.getBoolean("enable_transparent_notif", false);
                 SEMI_TRAN_STATUS = prefs.getBoolean("enable_statusbar_tint", true);
